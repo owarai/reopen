@@ -17,6 +17,10 @@ type ReopenableWriteSyncer struct {
 	closing chan bool
 }
 
+// New create reopen-support writeSyncer according to several parameters.
+// file specify the filename which reopen handled.
+// mode specify the file mode when open it.
+// sig specify which signals need to be monitored by reopen mechanics(default is USR1).
 func New(file string, mode os.FileMode, sig ...os.Signal) (*ReopenableWriteSyncer, error) {
 	ws := &ReopenableWriteSyncer{
 		filePath:  file,
