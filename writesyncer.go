@@ -1,3 +1,11 @@
+// Package reopen implements a reopen-support zapcore.WriteSyncer which aims to work with logrotate.
+//
+// Use New function to create this WriteSyncer and that's all.
+//
+// This zapcore.WriteSyncer implementation continues to write log to dest file until the target file is rotated by logrotate,
+// then it receives the syscall triggered by the postrotate configured in logrotate, opens a new file and continues to write.
+//
+// See github.com/owarai/reopen/example module for usage examples.
 package reopen
 
 import (
