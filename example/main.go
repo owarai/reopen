@@ -51,17 +51,17 @@ func main() {
 			return
 		}
 	}()
-	zapLog(ctx, "example")
+	zapLog(ctx, "example", time.Millisecond)
 }
 
-func zapLog(ctx context.Context, fileBaseName string) {
+func zapLog(ctx context.Context, fileBaseName string, writeInterval time.Duration) {
 	logger := newLogger(fileBaseName)
 
 	defer logger.Sync()
 	rand.Seed(time.Now().Unix())
 	url := "www.google.com"
 	for {
-		time.Sleep(time.Millisecond)
+		time.Sleep(writeInterval)
 		select {
 		case <-ctx.Done():
 			return
@@ -92,7 +92,13 @@ func newLogger(destName string) *zap.Logger {
 
 	// Optimize the log output for machine consumption and the console output
 	// for human operators.
-	encoder := zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
+	const defaultTimeFormat = "2006-01-02 15:04:05.00000"
+	encoderConfig := zap.NewProductionEncoderConfig()
+	encoderConfig.TimeKey = "time"
+	encoderConfig.EncodeTime = func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+		encodeTimeLayout(t, defaultTimeFormat, enc)
+	}
+	encoder := zapcore.NewJSONEncoder(encoderConfig)
 
 	// Join the outputs, encoders, and level-handling functions into
 	// zapcore.Cores, then tee the four cores together.
@@ -104,4 +110,18 @@ func newLogger(destName string) *zap.Logger {
 	// From a zapcore.Core, it's easy to construct a Logger.
 	logger := zap.New(core)
 	return logger
+}
+
+// borrow from zapcore.
+func encodeTimeLayout(t time.Time, layout string, enc zapcore.PrimitiveArrayEncoder) {
+	type appendTimeEncoder interface {
+		AppendTimeLayout(time.Time, string)
+	}
+
+	if enc, ok := enc.(appendTimeEncoder); ok {
+		enc.AppendTimeLayout(t, layout)
+		return
+	}
+
+	enc.AppendString(t.Format(layout))
 }
