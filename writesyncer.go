@@ -26,7 +26,7 @@ type ReopenableWriteSyncer struct {
 }
 
 // New create reopen-support writeSyncer according to several parameters.
-// file specify the filename which reopen handled.
+// file specify the file's absolute path which reopen handled.
 // mode specify the file mode when open it.
 // sig specify which signals need to be monitored by reopen mechanics(default is USR1).
 func New(file string, mode os.FileMode, sig ...os.Signal) (*ReopenableWriteSyncer, error) {
@@ -57,10 +57,9 @@ func (ws *ReopenableWriteSyncer) Sync() error {
 	return ws.getFile().Sync()
 }
 
-func (ws *ReopenableWriteSyncer) Close() (err error) {
+func (ws *ReopenableWriteSyncer) Close() error {
 	close(ws.closing)
-	_ = ws.getFile().Close()
-	return
+	return ws.getFile().Close()
 }
 
 func (ws *ReopenableWriteSyncer) getFile() *os.File {
@@ -71,10 +70,10 @@ func (ws *ReopenableWriteSyncer) watch() {
 	for {
 		select {
 		case <-ws.closing:
-			break
+			return
 		case <-ws.reopenSig:
 			if err := ws.reload(); err != nil {
-				break
+				return
 			}
 		}
 	}
