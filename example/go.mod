@@ -6,5 +6,5 @@ replace github.com/owarai/reopen => ../
 
 require (
 	github.com/owarai/reopen v0.0.0
-	go.uber.org/zap v1.15.0
+	go.uber.org/zap v1.21.0
 )
